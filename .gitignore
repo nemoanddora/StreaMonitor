@@ -7,3 +7,5 @@ venv*/
 .idea/
 config.json
 
+streamonitor/.DS_Store
+.DS_Store

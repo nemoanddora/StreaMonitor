@@ -103,37 +103,46 @@ def getVideoNativeHLS(self, url, filename, m3u_processor=None):
         return False
 
     # Post-processing
+    # try:
+    #     stdout = (
+    #         open(filename + ".postprocess_stdout.log", "w+")
+    #         if DEBUG
+    #         else subprocess.DEVNULL
+    #     )
+    #     stderr = (
+    #         open(filename + ".postprocess_stderr.log", "w+")
+    #         if DEBUG
+    #         else subprocess.DEVNULL
+    #     )
+    #     output_str = "-c:a copy -c:v copy"
+    #     suffix = ""
+    #     if SEGMENT_TIME is not None:
+    #         output_str += (
+    #             f" -f segment -reset_timestamps 1 -segment_time {str(SEGMENT_TIME)}"
+    #         )
+    #         if hasattr(self, "filename_extra_suffix"):
+    #             suffix = self.filename_extra_suffix
+    #         filename = (
+    #             filename[: -len("." + CONTAINER)] + "_%03d" + suffix + "." + CONTAINER
+    #         )
+    #     ff = FFmpeg(
+    #         executable=FFMPEG_PATH,
+    #         inputs={tmpfilename: None},
+    #         outputs={filename: output_str},
+    #     )
+    #     ff.run(stdout=stdout, stderr=stderr)
+    #     os.remove(tmpfilename)
+    # except FFRuntimeError as e:
+    #     if e.exit_code and e.exit_code != 255:
+    #         return False
+
     try:
-        stdout = (
-            open(filename + ".postprocess_stdout.log", "w+")
-            if DEBUG
-            else subprocess.DEVNULL
-        )
-        stderr = (
-            open(filename + ".postprocess_stderr.log", "w+")
-            if DEBUG
-            else subprocess.DEVNULL
-        )
-        output_str = "-c:a copy -c:v copy"
-        suffix = ""
-        if SEGMENT_TIME is not None:
-            output_str += (
-                f" -f segment -reset_timestamps 1 -segment_time {str(SEGMENT_TIME)}"
-            )
-            if hasattr(self, "filename_extra_suffix"):
-                suffix = self.filename_extra_suffix
-            filename = (
-                filename[: -len("." + CONTAINER)] + "_%03d" + suffix + "." + CONTAINER
-            )
-        ff = FFmpeg(
-            executable=FFMPEG_PATH,
-            inputs={tmpfilename: None},
-            outputs={filename: output_str},
-        )
-        ff.run(stdout=stdout, stderr=stderr)
-        os.remove(tmpfilename)
-    except FFRuntimeError as e:
-        if e.exit_code and e.exit_code != 255:
-            return False
+        logfile = os.path.join(target_dir, "make_mp4.log")
+        with open(logfile, "w") as log_handle:
+            logfile.write(f"finishing HLS download, converting to final file ")
+
+    except Exception as e:
+        print(e)
+        return False
 
     return True

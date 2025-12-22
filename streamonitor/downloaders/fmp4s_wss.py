@@ -88,7 +88,6 @@ def postprocess_and_move(
     try:
         # -------- Move processed file(s) --------
         import shutil
-        from datetime import datetime
         import glob
         import re
 
@@ -159,33 +158,22 @@ def getVideoWSSVR(self, url, filename):
     error = False
     url = url.replace("fmp4s://", "wss://")
 
-    base_folder = os.path.dirname(filename)
-    only_filename = os.path.basename(filename)
-    date_folder = os.path.join(base_folder, datetime.now().strftime("%Y%m%d_%H%M%S"))
-
-    if not os.path.exists(date_folder):
-        os.makedirs(date_folder, exist_ok=True)
-
-    filename = os.path.join(date_folder, only_filename)
-    suffix = getattr(self, "filename_extra_suffix", "")
-    basefilename = filename[: -len("." + CONTAINER)]
-    filename = basefilename + suffix + "." + CONTAINER
-
-    # Remove optional _LR_F### so we end right after seconds
-    cleanName = re.sub(r"_LR_F\d+(?=\.(?:mkv|ts)$)", "", filename)
-
-    # Match up to seconds, then assert (but don't consume) the extension
-    pattern = re.compile(
-        r"^(.*?)-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})(?=\.(?:mkv|ts)$)"
+    basefilename = (
+        self.outputFolder
+        + "/"
+        + datetime.now().strftime("%Y%m%d_%H%M%S")
+        + "/"
+        + self.username
+        + "_"
+        + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        + "_Dreamcam"
     )
-    m = pattern.match(cleanName)
-    if m:
-        prefix, y, mo, d, h, mi, s = m.groups()
-        # Grab the extension separately
-        ext = re.search(r"\.(mkv|ts)$", cleanName).group(0)
-        filename = f"{prefix}_{y}-{mo}-{d}_{h}-{mi}-{s}_DreamCam{ext}"
-        basefilename = filename[: -len("." + CONTAINER)]
-        filename = basefilename + suffix + "." + CONTAINER
+
+    target_dir = os.path.dirname(basefilename)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+
+    suffix = getattr(self, "filename_extra_suffix", "")
 
     # Paths
     tmp_mp4 = basefilename + ".tmp.mp4"
@@ -780,14 +768,17 @@ def getVideoWSSVR(self, url, filename):
                                 f"Failed to remove capture folder {target_dir}: {cleanup_err!r}"
                             )
                     else:
-                        logfile = os.path.join(target_dir, "make_mp4.log")
+
+                        logfile = os.path.join(
+                            os.path.dirname(basefilename), "make_mp4.log"
+                        )
 
                         make_mp4_args = ["bash", script_path]
                         # if CONTAINER.lower() == "mkv":
                         #     make_mp4_args.append("--mkv")
                         # elif CONTAINER.lower() == "mp4":
                         #     make_mp4_args.append("--mp4")
-                        make_mp4_args.append(target_dir)
+                        make_mp4_args.append(os.path.dirname(basefilename))
 
                         with open(logfile, "w") as log_handle:
                             subprocess.Popen(
@@ -801,7 +792,7 @@ def getVideoWSSVR(self, url, filename):
                 print(f"🎬 Script launched, logs are being written to {logfile}")
             else:
                 script_path = "/Users/larswissink/Documents/GitHub/StreaMonitor/streamonitor/downloaders/make_mp4.sh"
-                target_dir = os.path.dirname(filename)
+                target_dir = os.path.dirname(basefilename)
                 if not os.path.isdir(target_dir):
                     print(
                         f"⚠️ Target directory not found; skipping make_mp4: {target_dir}"

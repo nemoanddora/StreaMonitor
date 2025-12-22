@@ -14,8 +14,8 @@ class StripChatVR(StripChat):
         'CIRCULAR': 'C',
     }
 
-    def __init__(self, username, room_id=None):
-        super().__init__(username, room_id)
+    def __init__(self, username):
+        super().__init__(username)
         self.stopDownloadFlag = False
         self.vr = True
 
